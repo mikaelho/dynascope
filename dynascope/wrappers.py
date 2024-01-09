@@ -1,6 +1,5 @@
 import copy
 import inspect
-from contextlib import contextmanager
 from functools import partial
 from typing import MutableMapping
 from typing import MutableSequence
@@ -21,18 +20,6 @@ class DynamicObject(CallbackWrapper):
         osa(self, '_path', path)  # noqa
         osa(self, '_manager', manager)  # noqa
 
-    @contextmanager
-    def __call__(self, **kwargs):
-        frame = inspect.currentframe().f_back.f_back
-        previous_scopes = frame.f_locals.setdefault(self._manager.locals_key, [])
-        start_of_block_scope_length = len(previous_scopes)
-        for key, value in kwargs.items():
-            self._manager.mutate(frame, self._path, "__setattr__", (key, value), {})
-
-        yield
-
-        frame.f_locals[self._manager.locals_key] = previous_scopes[:start_of_block_scope_length]
-
     def __repr__(self):
         return self.__subject__.__repr__()
 
@@ -47,6 +34,8 @@ class DynamicObject(CallbackWrapper):
             return oga(self, attr)
         elif attr.startswith("_"):
             return getattr(subject, attr)
+        elif attr in mutating_methods[type(self)]:
+            return oga(self, attr)
         else:
             return wrap_target(getattr(subject, attr), self._path + [attr], self._manager)
 

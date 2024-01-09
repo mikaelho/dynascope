@@ -7,59 +7,8 @@ import pytest
 
 from dynascope import dynamic
 from dynascope import fix
+from dynascope import scope
 from dynascope import stack
-
-
-def test_vanilla_scopes():
-
-    global global_module_scope
-
-    global_module_scope = 1
-
-    def main():
-
-        def func_child(local_scope=2):
-            assert global_module_scope == 1
-            assert local_scope == 2
-            assert enclosing_scope == 3
-            with pytest.raises(NameError):
-                assert dynamic_scope == 4
-
-        def func_parent():
-            dynamic_scope = 4
-            func_child()
-
-        enclosing_scope = 3
-
-        func_parent()
-
-    main()
-
-
-def test_dynamic_scope_added():
-
-    global global_module_scope
-
-    global_module_scope = 1
-
-    def main():
-
-        def func_child(local_scope=2):
-            assert global_module_scope == 1
-            assert local_scope == 2
-            assert enclosing_scope == 3
-            assert stack.dynamic_scope == 4
-
-        def func_parent():
-            stack.dynamic_scope = 4
-            func_child()
-
-        enclosing_scope = 3
-
-        func_parent()
-
-    main()
-
 
 
 def test_dynamic_dict():
@@ -111,28 +60,44 @@ def test_dynamic_dataclass():
         host: str = ""
 
     @dataclass
+    class PluginSettings:
+        name: str = ""
+
+    @dataclass
     class Configuration:
         setting_1: int = 1
         server_settings: ServerSettings = field(default_factory=ServerSettings)
+        plugins: list[PluginSettings] = field(default_factory=list)
 
     conf = dynamic(Configuration)  # Or dynamic(Configuration())
     assert isinstance(conf, Configuration)
-    assert asdict(fix(conf)) == {"server_settings": {"host": ""}, "setting_1": 1}
+    assert asdict(fix(conf)) == {"setting_1": 1, "server_settings": {"host": ""}, "plugins": []}
     assert conf.setting_1 == 1
 
     def child():
         conf.setting_1 = 2
         conf.server_settings.host = "https://example.com"
+        conf.plugins.append(PluginSettings("secure"))
         assert conf.setting_1 == 2
         assert isinstance(conf.server_settings, ServerSettings)
         assert conf.server_settings.host == "https://example.com"
+        plugin = conf.plugins[0]
+        assert isinstance(plugin, PluginSettings)
+        assert plugin.name == "secure"
 
-        return conf.setting_1, conf.server_settings
+        with scope(plugin):
+            plugin.name = "unsecure"
+            assert plugin.name == "unsecure"
 
-    setting_1, server_settings = child()
+        assert plugin.name == "secure"
+
+        return conf.setting_1, conf.server_settings, conf.plugins
+
+    setting_1, server_settings, plugins = child()
 
     assert conf.setting_1 == setting_1 == 1
     assert server_settings.host == ""
+    assert plugins == []
 
 
 def test_context_manager():
@@ -140,11 +105,11 @@ def test_context_manager():
         assert stack.dynamic_variable == 3
         stack.dynamic_variable = 4
 
-        with stack():
+        with scope(stack):
             stack.dynamic_variable = 5
             assert stack.dynamic_variable == 5
 
-            with stack():
+            with scope(stack):
                 stack.dynamic_variable = 6
                 assert stack.dynamic_variable == 6
 
@@ -154,27 +119,29 @@ def test_context_manager():
 
     stack.dynamic_variable = 1
 
-    with stack():
+    with scope(stack):
         stack.dynamic_variable = 2
         assert stack.dynamic_variable == 2
 
     assert stack.dynamic_variable == 1
 
-    with stack():
+    with scope(stack):
         stack.dynamic_variable = 3
         child()
         assert stack.dynamic_variable == 3
 
     assert stack.dynamic_variable == 1
 
-    with stack(dynamic_variable=7):
+    with scope(stack):
+        stack.dynamic_variable = 7
         assert stack.dynamic_variable == 7
 
     assert stack.dynamic_variable == 1
 
     stack.next_level = SimpleNamespace(other_variable=1)
 
-    with stack.next_level(other_variable=2):
+    with scope(stack):
+        stack.next_level.other_variable = 2
         assert stack.next_level.other_variable == 2
 
     assert stack.next_level.other_variable == 1

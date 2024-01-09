@@ -30,4 +30,4 @@ def test_dynamic_logging(caplog):
 
     assert "Not logged" not in logs
     assert "Logged normally" in logs
-    assert logs.count("DEBUG - Logged only when called from the interesting call path") == 1
+    assert logs.count("DEBUG - Logged only when called from the call path of interest") == 1

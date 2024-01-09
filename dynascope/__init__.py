@@ -1,4 +1,6 @@
 import copy
+import inspect
+from contextlib import contextmanager
 from typing import TypeVar
 
 from dynascope.manager import Manager
@@ -33,6 +35,22 @@ def fix(obj):
     if is_dynamic(obj):
         obj = obj.__subject__
     return copy.deepcopy(obj)
+
+
+@contextmanager
+def scope(obj, **kwargs):
+    if not is_dynamic(obj):
+        raise TypeError(f"{obj} is not dynamic")
+
+    frame = inspect.currentframe().f_back.f_back
+    previous_scopes = frame.f_locals.setdefault(obj._manager.locals_key, [])
+    start_of_block_scope_length = len(previous_scopes)
+    for key, value in kwargs.items():
+        obj._manager.mutate(frame, obj._path, "__setattr__", (key, value), {})
+
+    yield
+
+    frame.f_locals[obj._manager.locals_key] = previous_scopes[:start_of_block_scope_length]
 
 
 class Stack:
