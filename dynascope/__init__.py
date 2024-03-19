@@ -5,6 +5,7 @@ from typing import TypeVar
 
 from dynascope.manager import Manager
 from dynascope.manager import is_dynamic
+from dynascope.wrappers import add_tracking_wrapper
 from dynascope.wrappers import wrap_target
 
 
@@ -59,3 +60,14 @@ class Stack:
 
 
 stack = dynamic(Stack)
+
+
+class Static:
+    """
+    Container that remains static when placed in a dynamic object.
+    """
+    def __init__(self, value=None):
+        self.value = value
+
+    def __deepcopy__(self, memo):
+        return self

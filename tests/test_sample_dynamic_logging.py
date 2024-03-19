@@ -10,24 +10,26 @@ logger = DynamicLogger(logging.getLogger(__name__))
 def test_dynamic_logging(caplog):
     logger.setLevel(logging.ERROR)
 
-    def path_of_interest():
+    def api_endpoint():
         stack.log_escalate = logging.ERROR
-        function_of_interest()
+        stack.transaction_id = 123
 
-    def other_call_paths():
-        function_of_interest()
+        service_function()
 
-    def function_of_interest():
+    def internal_call():
+        service_function()
+
+    def service_function():
         logger.debug("Logged only when called from the call path of interest")
 
     logger.debug("Not logged")
     logger.error("Logged normally")
 
-    path_of_interest()
-    other_call_paths()
+    internal_call()
+    api_endpoint()
 
     logs = caplog.text
 
     assert "Not logged" not in logs
     assert "Logged normally" in logs
-    assert logs.count("DEBUG - Logged only when called from the call path of interest") == 1
+    assert logs.count("DEBUG - Logged only when called from the call path of interest (#123)") == 1

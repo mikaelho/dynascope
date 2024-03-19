@@ -78,7 +78,7 @@ dynamic_types = {
 
 mutating_methods = {
     DynamicObject: [
-        '__setattr__', '__delattr__',  # '__iadd__', '__isub__', '__imul__', '__imatmul__', '__itruediv__',
+        '__setattr__', '__delattr__', # '__iadd__', '__isub__', '__imul__', '__imatmul__', '__itruediv__',
         # '__ifloordiv__', '__imod__', '__ipow__', '__ilshift__', '__irshift__', '__iand__', '__ixor__', '__ior__',
     ],
     DynamicMapping: [
@@ -94,20 +94,24 @@ mutating_methods = {
 
 # Add tracking wrappers to all mutating functions.
 
+def add_tracking_wrapper(dynamic_type, func_name):
+    def tracking_wrapper(self, *args, **kwargs):
+        result = self._manager.mutate(
+            inspect.currentframe().f_back,
+            self._path,
+            func_name,
+            args,
+            kwargs,
+        )
+        return result
+
+    setattr(dynamic_type, func_name, tracking_wrapper)
+    getattr(dynamic_type, func_name).__name__ = func_name
+
+
 for dynamic_type in mutating_methods:
     for func_name in mutating_methods[dynamic_type]:
-        def func(self, *args, tracker_function_name=func_name, **kwargs):
-            result = self._manager.mutate(
-                inspect.currentframe().f_back,
-                self._path,
-                tracker_function_name,
-                args,
-                kwargs,
-            )
-            return result
-
-        setattr(dynamic_type, func_name, func)
-        getattr(dynamic_type, func_name).__name__ = func_name
+        add_tracking_wrapper(dynamic_type, func_name)
 
 
 def wrap_target(target: T, path: list, manager: "Manager") -> T:

@@ -20,6 +20,9 @@ class DynamicLogger(ObjectWrapper):
         self.log(logging.ERROR, *args, **kwargs)
 
     def log(self, level, msg, *args, **kwargs):
+        if transaction_id := getattr(stack, "transaction_id", None):
+            msg = f"{msg} (#{transaction_id})"
+
         logging_threshold = self.getEffectiveLevel()
         if level < logging_threshold:
             if (escalation_level := getattr(stack, "log_escalate", None)) is not None:

@@ -1,11 +1,16 @@
 import copy
+import inspect
 from collections.abc import MutableMapping
 from collections.abc import MutableSequence
 from collections.abc import MutableSet
+from functools import wraps
 from typing import Any
 
 from dynascope.wrappers import DynamicObject
 from dynascope.wrappers import wrap_target
+
+
+TRANSPARENT_KEY = "_dynascope_is_transparent"
 
 
 class Manager:
@@ -37,8 +42,18 @@ class Manager:
         new_value = copy.deepcopy(stack_value)
         value_for_mutation = self.get_value_by_path(new_value, path)
         result = getattr(value_for_mutation, function_name)(*args, **kwargs)
+        if frame_actual := self.is_transparent(frame):
+            frame = frame_actual
         self.add_to_stack(new_value, frame)
         return wrap_target(result, path, self)
+
+    @staticmethod
+    def is_transparent(frame) -> Any | None:
+        while frame:
+            if frame.f_locals.get(TRANSPARENT_KEY):
+                return frame.f_back
+            frame = frame.f_back
+        return None
 
     def add_to_stack(self, obj, frame):
         frame.f_locals.setdefault(self.locals_key, []).append(obj)
@@ -69,3 +84,11 @@ class Manager:
 
 def is_dynamic(obj):
     return isinstance(obj, DynamicObject)
+
+
+def transparent(func):
+    """Decorator for marking functions that should not update scope."""
+    def wrapper_func(*args, **kwargs):
+        inspect.currentframe().f_locals[TRANSPARENT_KEY] = True
+        return func(*args, **kwargs)
+    return wrapper_func

@@ -1,10 +1,12 @@
 from dataclasses import asdict
 from dataclasses import dataclass
 from dataclasses import field
+from decimal import Decimal
 from types import SimpleNamespace
 
 import pytest
 
+from dynascope import Static
 from dynascope import dynamic
 from dynascope import fix
 from dynascope import scope
@@ -145,3 +147,29 @@ def test_context_manager():
         assert stack.next_level.other_variable == 2
 
     assert stack.next_level.other_variable == 1
+
+
+def test_carrying():
+    load = Static({"value": 1})
+    mule = dynamic({"load": load, "other": 2})
+
+    with scope(mule):
+        mule["other"] = 3
+        mule["load"].value["value"] = 2
+
+    assert mule["other"] == 2
+    assert mule["load"].value["value"] == load.value["value"] == 2
+
+
+def test_dynamic_depth():
+    @dataclass
+    class Callstack:
+        depth: int = 1
+
+    callstack = dynamic(Callstack())
+
+    with scope(callstack):
+        callstack.depth = callstack.depth + 1
+        assert callstack.depth == 2
+
+    assert callstack.depth == 1
