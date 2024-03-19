@@ -38,7 +38,27 @@ Generally, you do not need dynamic scoping for anything, but it might be handy w
 
 ## Details
 
+### Quick start with freeform attributes
+
+### Structure with dataclasses
+
+### Additional scope layers with context manager
+
+### Domain-specific context managers
+
+### Thread and async safe by default
+
+### Reverse
+
 # Sample use cases
+
+- Logging: Makes more sense to group logs by runtime context that from a lexical context. You could dinamically bind
+  the logger at a request handler so that all functions called from there share the same "requestID" in the log entries.
+- Output redirection
+- Resource Allocators: To keep track of resources allocated for a particular action/request, also
+  known as cancellation tokens.
+- Exception handling.
+- Contextual behaviour in general, e.g Emacs changing the key mapping in certain contexts.
 
 # Notes
 
