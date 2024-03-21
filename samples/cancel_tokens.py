@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from dataclasses import field
 
 from dynascope import Static
+from dynascope import dynamic
 from dynascope.manager import transparent
 
 
@@ -26,7 +27,7 @@ class BaseToken:
     def _check_token(self):
         pass
 
-    def check(self):
+    def check(self) -> bool:
         raised = []
 
         try:
@@ -47,6 +48,8 @@ class BaseToken:
                 raise raised[0]
             else:
                 raise ExceptionGroup(f"Raised from {self}", raised)
+
+        return True
 
 
 @dataclass
@@ -76,3 +79,14 @@ class CountdownToken(BaseToken):
 @transparent
 def add_to(token, *tokens):
     token.tokens.extend(tokens)
+
+
+tokens = dynamic(BaseToken())
+
+
+def check_tokens(func):
+    """Decorator to check() all active dynamic tokens."""
+    def wrapper(*args, **kwargs):
+        tokens.check()
+        return func(*args, **kwargs)
+    return wrapper
