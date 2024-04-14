@@ -1,6 +1,7 @@
 AUTHOR = 'Mikael Honkala'
 SITENAME = 'dynascope'
 SITEURL = "https://mikaelho.github.io/dynascope"
+RELATIVE_URLS = True
 
 PATH = "content"
 OUTPUT_PATH = "../docs"
