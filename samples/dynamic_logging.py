@@ -1,32 +1,24 @@
-import logging
-
-from peak.util.proxies import ObjectWrapper
+"Defines utilities for adjusting the logging level for a specific branch of function calls."
 
 from dynascope import stack
+from dynascope.manager import transparent
 
 
-class DynamicLogger(ObjectWrapper):
+def dynalog(logger):
+    "Patch the regular logger to support overriding with a temporary log level for the call branch."
+    original_IsEnabledFor = logger.isEnabledFor
 
-    def debug(self, *args, **kwargs):
-        self.log(logging.DEBUG, *args, **kwargs)
+    def adjusted_IsEnabledFor(level):
+        if (temporary_log_level := getattr(stack, "temporary_log_level", None)) is not None:
+            return temporary_log_level <= level
+        else:
+            return original_IsEnabledFor(level)
 
-    def info(self, *args, **kwargs):
-        self.log(logging.INFO, *args, **kwargs)
+    setattr(logger, "isEnabledFor", adjusted_IsEnabledFor)
+    return logger
 
-    def warning(self, *args, **kwargs):
-        self.log(logging.WARNING, *args, **kwargs)
 
-    def error(self, *args, **kwargs):
-        self.log(logging.ERROR, *args, **kwargs)
-
-    def log(self, level, msg, *args, **kwargs):
-        if transaction_id := getattr(stack, "transaction_id", None):
-            msg = f"{msg} (#{transaction_id})"
-
-        logging_threshold = self.getEffectiveLevel()
-        if level < logging_threshold:
-            if (escalation_level := getattr(stack, "log_escalate", None)) is not None:
-                if logging_threshold <= escalation_level:
-                    msg = f"{logging.getLevelName(level)} - {msg}"
-                    self.__subject__.log(escalation_level, msg, *args, **kwargs)
-        self.__subject__.log(level, msg, *args, **kwargs)
+@transparent
+def set_dynamic_level(level: int):
+    "Set the log level for the branch of function calls."
+    stack.temporary_log_level = level
