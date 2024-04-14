@@ -10,7 +10,7 @@ TIMEZONE = 'Europe/Helsinki'
 
 DEFAULT_LANG = 'en'
 
-THEME = "simple"
+# THEME = "simple"
 
 # Feed generation is usually not desired when developing
 FEED_ALL_ATOM = None
