@@ -1,7 +1,7 @@
 import logging
 
 from samples.dynamic_logging import dynalog
-from samples.dynamic_logging import set_dynamic_level
+from samples.dynamic_logging import scope
 
 
 logger = logging.getLogger(__name__)
@@ -12,16 +12,13 @@ def test_dynamic_logging(caplog):
     logger.setLevel(logging.ERROR)
 
     def api_endpoint():
-        set_dynamic_level(logging.DEBUG)
-        service_function()
-
-    def internal_call():
+        scope.log_level = logging.DEBUG  # Set log level for this call branch only
         service_function()
 
     def service_function():
-        logger.debug("Logged only when debug is called in the relevant call branch")
+        logger.debug("This message is only interesting for APIs")
 
-    internal_call()  # Debug message is not logged
+    service_function()  # Debug message is not logged
     api_endpoint()  # Debug message is logged
 
     logger.debug("Not logged")
@@ -33,4 +30,4 @@ def test_dynamic_logging(caplog):
 
     # We get the interesting log message only once, when the log call is made via the api_endpoint() that
     # sets a lower log level for that call branch.
-    assert logs.count("Logged only when debug is called in the relevant call branch") == 1
+    assert logs.count("This message is only interesting for APIs") == 1

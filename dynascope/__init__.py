@@ -9,7 +9,7 @@ from dynascope.wrappers import add_tracking_wrapper
 from dynascope.wrappers import wrap_target
 
 
-__all__ = "dynamic", "is_dynamic", "fix", "stack"
+__all__ = "dynamic", "is_dynamic", "fix", "scope"
 
 
 T = TypeVar("T")
@@ -39,7 +39,7 @@ def fix(obj):
 
 
 @contextmanager
-def scope(obj, **kwargs):
+def scope_manager(obj, **kwargs):
     if not is_dynamic(obj):
         raise TypeError(f"{obj} is not dynamic")
 
@@ -54,12 +54,33 @@ def scope(obj, **kwargs):
     frame.f_locals[obj._manager.locals_key] = previous_scopes[:start_of_block_scope_length]
 
 
-class Stack:
+class Scope:
     """Empty object container."""
     pass
 
 
-stack = dynamic(Stack)
+scope = dynamic(Scope)
+
+
+# class Scope:
+#     # def __new__(cls, *args, **kwargs):
+#     #     self = super().__new__(cls, *args, **kwargs)
+#     #     return dynamic(self)
+#
+#     @contextmanager
+#     def __call__(self, manager, path, **kwargs):
+#         frame = inspect.currentframe().f_back.f_back
+#         previous_scopes = frame.f_locals.setdefault(manager.locals_key, [])
+#         start_of_block_scope_length = len(previous_scopes)
+#         for key, value in kwargs.items():
+#             manager.mutate(frame, path, "__setattr__", (key, value), {})
+#
+#         yield
+#
+#         frame.f_locals[manager.locals_key] = previous_scopes[:start_of_block_scope_length]
+#
+#
+# scopish = dynamic(Scope())
 
 
 class Static:

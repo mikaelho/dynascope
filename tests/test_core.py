@@ -1,7 +1,6 @@
 from dataclasses import asdict
 from dataclasses import dataclass
 from dataclasses import field
-from decimal import Decimal
 from types import SimpleNamespace
 
 import pytest
@@ -9,8 +8,8 @@ import pytest
 from dynascope import Static
 from dynascope import dynamic
 from dynascope import fix
+from dynascope import scope_manager
 from dynascope import scope
-from dynascope import stack
 
 
 def test_dynamic_dict():
@@ -87,7 +86,7 @@ def test_dynamic_dataclass():
         assert isinstance(plugin, PluginSettings)
         assert plugin.name == "secure"
 
-        with scope(plugin):
+        with scope_manager(plugin):
             plugin.name = "unsecure"
             assert plugin.name == "unsecure"
 
@@ -102,58 +101,81 @@ def test_dynamic_dataclass():
     assert plugins == []
 
 
+# def test_scopish():
+#     scopish.variable = 1
+#
+#     def function():
+#         assert scopish.variable == 1
+#         scopish.variable = 2
+#         assert scopish.variable == 2
+#
+#     function()
+#     assert scopish.variable == 1
+#
+#
+# def test_scopish_context_manager():
+#     scopish.variable = 1
+#
+#     with scopish():
+#         assert scopish.variable == 1
+#         scopish.variable = 2
+#         assert scopish.variable == 2
+#
+#     assert scopish.variable == 1
+
+
 def test_context_manager():
     def child():
-        assert stack.dynamic_variable == 3
-        stack.dynamic_variable = 4
+        assert scope.dynamic_variable == 3
+        scope.dynamic_variable = 4
 
-        with scope(stack):
-            stack.dynamic_variable = 5
-            assert stack.dynamic_variable == 5
+        with scope_manager(scope):
+            scope.dynamic_variable = 5
+            assert scope.dynamic_variable == 5
 
-            with scope(stack):
-                stack.dynamic_variable = 6
-                assert stack.dynamic_variable == 6
+            with scope_manager(scope):
+                scope.dynamic_variable = 6
+                assert scope.dynamic_variable == 6
 
-            assert stack.dynamic_variable == 5
+            assert scope.dynamic_variable == 5
 
-        assert stack.dynamic_variable == 4
+        assert scope.dynamic_variable == 4
 
-    stack.dynamic_variable = 1
+    scope.dynamic_variable = 1
 
-    with scope(stack):
-        stack.dynamic_variable = 2
-        assert stack.dynamic_variable == 2
+    with scope_manager(scope):
+        scope.dynamic_variable = 2
+        assert scope.dynamic_variable == 2
 
-    assert stack.dynamic_variable == 1
+    assert scope.dynamic_variable == 1
 
-    with scope(stack):
-        stack.dynamic_variable = 3
+    with scope_manager(scope):
+        scope.dynamic_variable = 3
         child()
-        assert stack.dynamic_variable == 3
+        assert scope.dynamic_variable == 3
 
-    assert stack.dynamic_variable == 1
+    assert scope.dynamic_variable == 1
 
-    with scope(stack):
-        stack.dynamic_variable = 7
-        assert stack.dynamic_variable == 7
+    with scope_manager(scope):
+        scope.dynamic_variable = 7
+        assert scope.dynamic_variable == 7
 
-    assert stack.dynamic_variable == 1
+    assert scope.dynamic_variable == 1
 
-    stack.next_level = SimpleNamespace(other_variable=1)
+    scope.next_level = SimpleNamespace(other_variable=1)
 
-    with scope(stack):
-        stack.next_level.other_variable = 2
-        assert stack.next_level.other_variable == 2
+    with scope_manager(scope):
+        scope.next_level.other_variable = 2
+        assert scope.next_level.other_variable == 2
 
-    assert stack.next_level.other_variable == 1
+    assert scope.next_level.other_variable == 1
 
 
 def test_carrying():
     load = Static({"value": 1})
     mule = dynamic({"load": load, "other": 2})
 
-    with scope(mule):
+    with scope_manager(mule):
         mule["other"] = 3
         mule["load"].value["value"] = 2
 
@@ -168,7 +190,7 @@ def test_dynamic_depth():
 
     callstack = dynamic(Callstack())
 
-    with scope(callstack):
+    with scope_manager(callstack):
         callstack.depth = callstack.depth + 1
         assert callstack.depth == 2
 

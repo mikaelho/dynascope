@@ -20,6 +20,11 @@ class DynamicObject(CallbackWrapper):
         osa(self, '_path', path)  # noqa
         osa(self, '_manager', manager)  # noqa
 
+    def __call__(self, *args, **kwargs):
+        from dynascope import scope_manager
+
+        return scope_manager(self, **kwargs)
+
     def __repr__(self):
         return self.__subject__.__repr__()
 

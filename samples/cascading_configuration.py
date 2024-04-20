@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from dataclasses import field
 
 from dynascope import dynamic
-from dynascope import scope
+from dynascope import scope_manager
 
 
 @dataclass
@@ -18,7 +18,7 @@ class Border:
 
 
 def border(corners="square", width=1.0, color="black"):
-    return scope(style.border, corners=corners, width=width, color=color)
+    return scope_manager(style.border, corners=corners, width=width, color=color)
 
 
 @dataclass
@@ -31,7 +31,7 @@ class Background:
 
 
 def background(color="white"):
-    return scope(style.background, color=color)
+    return scope_manager(style.background, color=color)
 
 
 @dataclass
@@ -44,7 +44,7 @@ class Text:
 
 
 def text(color="black"):
-    return scope(style.text, color=color)
+    return scope_manager(style.text, color=color)
 
 
 @dataclass

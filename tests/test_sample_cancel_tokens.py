@@ -3,7 +3,7 @@ import time
 import pytest
 
 from dynascope import dynamic
-from dynascope import scope
+from dynascope import scope_manager
 from samples.cancel_tokens import CountdownToken
 from samples.cancel_tokens import TimeoutToken
 from samples.cancel_tokens import TokenException
@@ -40,7 +40,7 @@ def test_combined_tokens():
 def test_dynamic_tokens():
     add_to(tokens, CountdownToken(3))
 
-    with scope(tokens):
+    with scope_manager(tokens):
         add_to(tokens, CountdownToken(1))
         tokens.check()
 
@@ -54,7 +54,6 @@ def test_dynamic_tokens():
 
 
 def test_check_decorator():
-
     # Set up sample intensive retry operation
 
     call_counter = 0  # Used to check results, not for cancelling
@@ -71,7 +70,7 @@ def test_check_decorator():
             repeatedly_called_function()
 
     # Configure retry count external to the operation
-    with scope(tokens):
+    with scope_manager(tokens):
         add_to(tokens, CountdownToken(3))
 
         with pytest.raises(TokenExhausted):
@@ -81,7 +80,7 @@ def test_check_decorator():
     call_counter = 0
 
     # Configure time-based cancellation instead
-    with scope(tokens):
+    with scope_manager(tokens):
         add_to(tokens, TimeoutToken(0.05))
 
         with pytest.raises(TokenTimeout):
@@ -91,7 +90,7 @@ def test_check_decorator():
     call_counter = 0
 
     # Configure multiple cancellation criteria
-    with scope(tokens):
+    with scope_manager(tokens):
         add_to(tokens, TimeoutToken(1000))
         add_to(tokens, CountdownToken(2))
 

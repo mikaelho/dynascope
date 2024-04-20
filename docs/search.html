@@ -8,10 +8,10 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		
 		
-		<link rel="canonical" href="https://mikaelho.github.io/dynascope/">
+		
 		<link rel="shortcut icon" href="./img/favicon.ico">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
-		<title>Welcome to MkDocs - Dynascope</title>
+		<title>Dynascope</title>
 		<link href="./bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 		<link href="./css/font-awesome-5.12.2-all.min.css" rel="stylesheet">
 		<link href="./css/base.css" rel="stylesheet">
@@ -23,16 +23,7 @@
 			var base_url = '.';
 			var home_url = './home';
 			var is_outer_page = false;
-			
-			var pageToc = [
-				{title: "Welcome to MkDocs", url: "#_top", children: [
-						
-				{title: "Commands", url: "#_top", children: [
-				]},
-				{title: "Project layout", url: "#project-layout", children: [
-				]},
-				]},
-			];
+			var pageToc = null;
 
 		</script>
 		<script src="./js/base.js"></script> 
@@ -45,23 +36,21 @@
 			<a name="_top" aria-hidden="true"></a>
 			
 
-			
+  <h1 id="search" class="pt-2">Search Results</h1>
 
-			<h1 id="welcome-to-mkdocs">Welcome to MkDocs</h1>
-<p>For full documentation visit <a href="https://www.mkdocs.org">mkdocs.org</a>.</p>
-<h2 id="commands">Commands</h2>
-<ul>
-<li><code>mkdocs new [dir-name]</code> - Create a new project.</li>
-<li><code>mkdocs serve</code> - Start the live-reloading docs server.</li>
-<li><code>mkdocs build</code> - Build the documentation site.</li>
-<li><code>mkdocs -h</code> - Print help message and exit.</li>
-</ul>
-<h2 id="project-layout">Project layout</h2>
-<pre><code>mkdocs.yml    # The configuration file.
-docs/
-    index.md  # The documentation homepage.
-    ...       # Other markdown pages, images and other files.
-</code></pre>
+  <div id="mkdocs-search-results" class="wm-search-page">
+    Searching...
+  </div>
+
+  <script>
+    window.top.doSearch({
+      resultsElem: document.getElementById('mkdocs-search-results'),
+      query: getParam('q'),
+      snippetLen: 200,
+      limit: 0
+    });
+  </script>
+
 
 			<br>
 			
@@ -71,8 +60,8 @@ docs/
 
 		<footer class="container-fluid wm-page-content text-center small">
 			<p>
-			<a href="https://github.com/mikaelho/dynascope/edit/master/docs/index.md" target="_blank"><i class="fab fa-github"></i>
-Edit on GitHub</a>
+			<a href="https://github.com/mikaelho/dynascope/" target="_blank"><i class="fab fa-github"></i>
+GitHub</a>
 			</p>
 			<details>
 				<summary>
